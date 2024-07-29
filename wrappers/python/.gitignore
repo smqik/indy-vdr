@@ -1,0 +1,11 @@
+build
+dist
+github
+networks
+.pytest_cache
+__pycache__
+*.dll
+*.dylib
+*.so
+*.egg-info
+demo/genesis_sov_buildernet.txn
