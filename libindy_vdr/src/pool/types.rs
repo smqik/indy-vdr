@@ -636,6 +636,7 @@ pub struct PoolSetup {
     pub merkle_tree: MerkleTree,
     pub node_weights: Option<HashMap<String, f32>>,
     pub verifiers: Verifiers,
+    pub refreshed: bool,
 }
 
 impl PoolSetup {
@@ -644,12 +645,14 @@ impl PoolSetup {
         merkle_tree: MerkleTree,
         node_weights: Option<HashMap<String, f32>>,
         verifiers: Verifiers,
+        refreshed: bool,
     ) -> Self {
         Self {
             config,
             merkle_tree,
             node_weights,
             verifiers,
+            refreshed,
         }
     }
 }
@@ -679,8 +682,48 @@ impl<T> RequestResult<T> {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct StateProofAssertions {
+    pub ledger_id: i32,
+    pub pool_state_root_hash: String,
+    pub state_root_hash: String,
+    pub timestamp: u64,
+    pub txn_root_hash: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StateProofResult {
+    Missing,
+    Invalid(String, Option<StateProofAssertions>),
+    Expired(StateProofAssertions),
+    Verified(StateProofAssertions),
+}
+
+impl StateProofResult {
+    pub fn is_verified(&self) -> bool {
+        matches!(self, Self::Verified(_))
+    }
+}
+
+impl std::fmt::Display for StateProofResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Missing => f.write_str("Missing state proof"),
+            Self::Invalid(msg, _asserts) => f.write_fmt(format_args!("Invalid state proof: {msg}")),
+            Self::Expired(_) => f.write_str("Expired state proof"),
+            Self::Verified(_) => f.write_str("Verified state proof"),
+        }
+    }
+}
+
 /// Type representing timing information collected for ledger transaction request
 pub type TimingResult = HashMap<String, f32>;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RequestResultMeta {
+    pub state_proof: HashMap<String, StateProofResult>,
+    pub timing: Option<TimingResult>,
+}
 
 /// The result of a request to a single validator node
 #[derive(Debug)]

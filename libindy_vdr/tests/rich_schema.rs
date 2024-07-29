@@ -1,4 +1,4 @@
-#![cfg(feature = "rich_schema")]
+
 
 #[macro_use]
 mod utils;

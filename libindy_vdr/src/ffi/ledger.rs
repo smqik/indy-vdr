@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::common::error::prelude::*;
 use crate::ledger::constants::UpdateRole;
-#[cfg(any(feature = "rich_schema", test))]
+
 use crate::ledger::identifiers::RichSchemaId;
 use crate::ledger::identifiers::{CredentialDefinitionId, RevocationRegistryId, SchemaId};
 use crate::ledger::requests::auth_rule::{AuthRules, Constraint};
@@ -12,7 +12,7 @@ use crate::ledger::requests::node::NodeOperationData;
 use crate::ledger::requests::pool::Schedule;
 use crate::ledger::requests::rev_reg::RevocationRegistryDelta;
 use crate::ledger::requests::rev_reg_def::{RegistryType, RevocationRegistryDefinition};
-#[cfg(any(feature = "rich_schema", test))]
+
 use crate::ledger::requests::rich_schema::RSContent;
 use crate::ledger::requests::schema::Schema;
 use crate::pool::PreparedRequest;
@@ -108,6 +108,30 @@ pub extern "C" fn indy_vdr_build_attrib_request(
         Ok(ErrorCode::Success)
     }
 }
+
+#[no_mangle]
+pub extern "C" fn indy_vdr_build_handle_request(
+    submitter_did: FfiStr, // optional
+    target_did: FfiStr,
+    handle: FfiStr,  // optional
+    handle_p: *mut RequestHandle,
+) -> ErrorCode {
+    catch_err! {
+        trace!("Build HANDLE request");
+        check_useful_c_ptr!(handle_p);
+        let builder = get_request_builder()?;
+        let identifier = DidValue::from_str(submitter_did.as_str())?;
+        let dest = DidValue::from_str(target_did.as_str())?;
+        let handle = handle.as_str();
+        let req = builder.build_handle_request(&identifier, &dest, handle.to_string())?;
+        let reqhandle = add_request(req)?;
+        unsafe {
+            *handle_p = reqhandle;
+        }
+        Ok(ErrorCode::Success)
+    }
+}
+
 
 #[no_mangle]
 pub extern "C" fn indy_vdr_build_get_attrib_request(
@@ -533,7 +557,7 @@ pub extern "C" fn indy_vdr_build_txn_author_agreement_request(
     }
 }
 
-#[cfg(any(feature = "rich_schema", test))]
+
 #[no_mangle]
 pub extern "C" fn indy_vdr_build_rich_schema_request(
     submitter_did: FfiStr,
@@ -573,7 +597,7 @@ pub extern "C" fn indy_vdr_build_rich_schema_request(
     }
 }
 
-#[cfg(any(feature = "rich_schema", test))]
+
 #[no_mangle]
 pub extern "C" fn indy_vdr_build_get_rich_schema_object_by_id_request(
     submitter_did: FfiStr,
@@ -595,7 +619,7 @@ pub extern "C" fn indy_vdr_build_get_rich_schema_object_by_id_request(
     }
 }
 
-#[cfg(any(feature = "rich_schema", test))]
+
 #[no_mangle]
 pub extern "C" fn indy_vdr_build_get_rich_schema_object_by_metadata_request(
     submitter_did: FfiStr,

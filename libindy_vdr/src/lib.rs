@@ -14,6 +14,7 @@
 //!
 //! ```no_run
 //! use futures_executor::block_on;
+//! use indy_vdr::config::PoolConfig;
 //! use indy_vdr::pool::{
 //!     helpers::perform_get_txn,
 //!     PoolBuilder,
@@ -25,19 +26,19 @@
 //! let txns = PoolTransactions::from_json_file("./genesis.txn").unwrap();
 //!
 //! // Create a PoolBuilder instance
-//! let pool_builder = PoolBuilder::default().transactions(txns).unwrap();
+//! let pool_builder = PoolBuilder::new(PoolConfig::default(), txns);
 //! // Convert into a thread-local Pool instance
 //! let pool = pool_builder.into_local().unwrap();
 //!
 //! // Create a new GET_TXN request and dispatch it
 //! let ledger_type = 1;  // 1 identifies the Domain ledger, see pool::LedgerType
 //! let seq_no = 1;       // Transaction sequence number
-//! let (result, _timing) = block_on(perform_get_txn(&pool, ledger_type, seq_no)).unwrap();
+//! let (result, _meta) = block_on(perform_get_txn(&pool, ledger_type, seq_no)).unwrap();
 
-#![cfg_attr(feature = "fatal_warnings", deny(warnings))]
+// #![cfg_attr(feature = "fatal_warnings", deny(warnings))]
 #![recursion_limit = "1024"] // for select! macro usage
 
-#[cfg(feature = "log")]
+// #[cfg(feature = "log")]
 #[macro_use]
 extern crate log;
 
@@ -60,13 +61,12 @@ pub mod common;
 /// Configuration data types and defaults
 pub mod config;
 /// Foreign function interface (C API)
-#[cfg(feature = "ffi")]
-mod ffi;
+pub mod ffi;
 /// Request and response types for the Indy Node ledger
 pub mod ledger;
 /// Handling of verifier pool instances and communication
 pub mod pool;
-
+pub mod tools;
 /// did:indy DID URL resolver
 pub mod resolver;
 /// State proof verification for ledger read transactions
