@@ -14,6 +14,8 @@ pub const DISABLE_ALL_TXN_AUTHR_AGRMTS: &str = "8";
 pub const LEDGERS_FREEZE: &str = "9";
 pub const GET_FROZEN_LEDGERS: &str = "10";
 pub const ATTRIB: &str = "100";
+pub const HANDLE: &str = "10500";
+pub const HANDLE_GET: &str = "10501";
 pub const SCHEMA: &str = "101";
 pub const CRED_DEF: &str = "102";
 pub const GET_ATTR: &str = "104";
@@ -46,11 +48,13 @@ pub const RICH_SCHEMA_PRES_DEF: &str = "205";
 pub const GET_RICH_SCHEMA_BY_ID: &str = "300";
 pub const GET_RICH_SCHEMA_BY_METADATA: &str = "301";
 
-pub const REQUESTS: [&str; 35] = [
+pub const REQUESTS: [&str; 37] = [
     NODE,
     NYM,
     GET_TXN,
     ATTRIB,
+    HANDLE,
+    HANDLE_GET,
     SCHEMA,
     CRED_DEF,
     GET_ATTR,
@@ -85,11 +89,12 @@ pub const REQUESTS: [&str; 35] = [
 ];
 
 // likely matches REQUESTS_FOR_STATE_PROOFS
-pub const READ_REQUESTS: [&str; 14] = [
+pub const READ_REQUESTS: [&str; 15] = [
     GET_NYM,
     GET_TXN_AUTHR_AGRMT,
     GET_TXN_AUTHR_AGRMT_AML,
     GET_SCHEMA,
+    HANDLE_GET,
     GET_CRED_DEF,
     GET_ATTR,
     GET_REVOC_REG,
@@ -311,6 +316,7 @@ pub fn txn_name_to_code(txn: &str) -> Option<&str> {
         "GET_TXN" => Some(GET_TXN),
         "ATTRIB" => Some(ATTRIB),
         "SCHEMA" => Some(SCHEMA),
+        "RICH_SCHEMA" => Some(RICH_SCHEMA),
         "CRED_DEF" | "CLAIM_DEF" => Some(CRED_DEF),
         "GET_ATTR" => Some(GET_ATTR),
         "GET_NYM" => Some(GET_NYM),

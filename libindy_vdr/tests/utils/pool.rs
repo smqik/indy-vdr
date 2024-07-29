@@ -3,6 +3,7 @@ use std::env;
 use futures_executor::block_on;
 
 use indy_vdr::common::error::VdrResult;
+use indy_vdr::config::PoolConfig;
 use indy_vdr::ledger::RequestBuilder;
 use indy_vdr::pool::helpers::{perform_ledger_action, perform_ledger_request};
 use indy_vdr::pool::{
@@ -41,9 +42,7 @@ impl TestPool {
         let pool_transactions =
             PoolTransactions::from_json_transactions(default_transactions()).unwrap();
 
-        let pool = PoolBuilder::default()
-            .transactions(pool_transactions)
-            .unwrap()
+        let pool = PoolBuilder::new(PoolConfig::default(), pool_transactions)
             .into_shared()
             .unwrap();
 
@@ -51,7 +50,7 @@ impl TestPool {
     }
 
     pub fn transactions(&self) -> Vec<String> {
-        self.pool.get_json_transactions().unwrap()
+        self.pool.get_transactions().encode_json().unwrap()
     }
 
     pub fn request_builder(&self) -> RequestBuilder {
@@ -60,7 +59,7 @@ impl TestPool {
 
     pub fn send_request(&self, prepared_request: &PreparedRequest) -> Result<String, String> {
         block_on(async {
-            let (request_result, _timing) = perform_ledger_request(&self.pool, prepared_request)
+            let (request_result, _meta) = perform_ledger_request(&self.pool, prepared_request)
                 .await
                 .unwrap();
 
@@ -78,7 +77,7 @@ impl TestPool {
         timeout: Option<i64>,
     ) -> VdrResult<NodeReplies<String>> {
         block_on(async {
-            let (request_result, _timing) = perform_ledger_action(
+            let (request_result, _meta) = perform_ledger_action(
                 &self.pool,
                 prepared_request.req_id.clone(),
                 prepared_request.req_json.to_string(),
