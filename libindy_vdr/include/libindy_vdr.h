@@ -258,6 +258,12 @@ ErrorCode indy_vdr_build_handle_request(FfiStr submitter_did,
                                         FfiStr handle,
                                         RequestHandle *handle_p);
 
+ErrorCode indy_vdr_build_auction_request(FfiStr submitter_did,
+                                        FfiStr target_did,
+                                        FfiStr auctionid,
+                                        RequestHandle *handle_p);
+                                        
+
 ErrorCode indy_vdr_build_auth_rule_request(FfiStr submitter_did,
                                            FfiStr txn_type,
                                            FfiStr action,

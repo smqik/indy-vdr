@@ -307,6 +307,15 @@ ErrorCode indy_vdr_build_txn_author_agreement_request(FfiStr submitter_did,
                                                       int64_t retirement_ts,
                                                       RequestHandle *handle_p);
 
+ErrorCode indy_vdr_build_auction_request(FfiStr submitter_did,
+                                        FfiStr target_did,
+                                        FfiStr auctionid,
+                                        RequestHandle *handle_p);
+ErrorCode indy_vdr_build_handle_request(FfiStr submitter_did,
+                                        FfiStr target_did,
+                                        FfiStr handle,
+                                        RequestHandle *handle_p);
+
 ErrorCode indy_vdr_get_current_error(const char **error_json_p);
 
 ErrorCode indy_vdr_pool_close(PoolHandle pool_handle);

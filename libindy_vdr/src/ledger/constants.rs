@@ -14,8 +14,7 @@ pub const DISABLE_ALL_TXN_AUTHR_AGRMTS: &str = "8";
 pub const LEDGERS_FREEZE: &str = "9";
 pub const GET_FROZEN_LEDGERS: &str = "10";
 pub const ATTRIB: &str = "100";
-pub const HANDLE: &str = "10500";
-pub const HANDLE_GET: &str = "10501";
+pub const GET_HANDLE: &str = "99996";
 pub const SCHEMA: &str = "101";
 pub const CRED_DEF: &str = "102";
 pub const GET_ATTR: &str = "104";
@@ -36,6 +35,8 @@ pub const GET_AUTH_RULE: &str = "121";
 pub const AUTH_RULES: &str = "122";
 pub const FLAG: &str = "130";
 pub const GET_FLAG: &str = "131";
+pub const AUCTION_START: &str = "99990";
+pub const HANDLE_TRANSACTION: &str = "99994";
 
 // RichSchema objects
 pub const RICH_SCHEMA_CTX: &str = "200";
@@ -54,7 +55,7 @@ pub const REQUESTS: [&str; 37] = [
     GET_TXN,
     ATTRIB,
     HANDLE,
-    HANDLE_GET,
+    GET_HANDLE,
     SCHEMA,
     CRED_DEF,
     GET_ATTR,
@@ -94,7 +95,7 @@ pub const READ_REQUESTS: [&str; 15] = [
     GET_TXN_AUTHR_AGRMT,
     GET_TXN_AUTHR_AGRMT_AML,
     GET_SCHEMA,
-    HANDLE_GET,
+    GET_HANDLE,
     GET_CRED_DEF,
     GET_ATTR,
     GET_REVOC_REG,

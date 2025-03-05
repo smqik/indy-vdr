@@ -32,6 +32,8 @@ pub mod validator_info;
 
 pub mod handle;
 
+pub mod auction;
+
 use std::collections::HashMap;
 
 use serde;
