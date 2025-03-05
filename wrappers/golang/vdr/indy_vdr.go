@@ -24,6 +24,7 @@ typedef void (*statusWrapper)(ErrorCode err, const char* response);
 import "C"
 
 import (
+	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,6 +32,7 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/hyperledger/indy-vdr/wrappers/golang/crypto"
 	"github.com/mr-tron/base58"
 	"github.com/pkg/errors"
 )
@@ -42,8 +44,8 @@ type Client struct {
 	genesisTxns []byte
 }
 
-//New creates an Indy IndyVDR client connected to the Indy distributed ledger identified by the genesis file
-//provided as a reader.
+// New creates an Indy IndyVDR client connected to the Indy distributed ledger identified by the genesis file
+// provided as a reader.
 func New(genesis io.ReadCloser) (*Client, error) {
 
 	txns, err := ioutil.ReadAll(genesis)
@@ -75,12 +77,12 @@ func New(genesis io.ReadCloser) (*Client, error) {
 	return out, nil
 }
 
-//Genesis returns the genesis file of the network to which this client is connected
+// Genesis returns the genesis file of the network to which this client is connected
 func (r *Client) Genesis() []byte {
 	return r.genesisTxns
 }
 
-//Close shuts down the connection and frees all resources form the indy distributed ledger
+// Close shuts down the connection and frees all resources form the indy distributed ledger
 func (r *Client) Close() error {
 	result := C.indy_vdr_pool_close(C.int64_t(r.pool))
 	if result != 0 {
@@ -108,9 +110,8 @@ func submitRequestCb(cb_id C.CallbackId, err C.ErrorCode, response *C.char) {
 	submitRequestCh <- msg
 }
 
-//Submit is used to send prepared read requests to the ledger where the request parameter is the JSON-formatted payload.
+// Submit is used to send prepared read requests to the ledger where the request parameter is the JSON-formatted payload.
 func (r *Client) Submit(request []byte) (*ReadReply, error) {
-
 	var cusreq C.int64_t
 	cjson := C.CString(string(request))
 	result := C.indy_vdr_build_custom_request(cjson, &cusreq)
@@ -119,15 +120,15 @@ func (r *Client) Submit(request []byte) (*ReadReply, error) {
 		var errMsg *C.char
 		C.indy_vdr_get_current_error(&errMsg)
 		defer C.free(unsafe.Pointer(errMsg))
+		fmt.Println("\n Error is: ", C.GoString(errMsg))
 		return nil, fmt.Errorf("invalid custom request: (Indy error code: [%s])", C.GoString(errMsg))
 	}
 	defer C.indy_vdr_request_free(cusreq)
-
 	return r.submitReadRequest(cusreq)
 }
 
-//GetNym fetches the NYM transaction associated with a DID
-//FIXME: Expose optional seq_no and timestamp to get specific NYM versions
+// GetNym fetches the NYM transaction associated with a DID
+// FIXME: Expose optional seq_no and timestamp to get specific NYM versions
 // on did:indy compliant ledgers
 func (r *Client) GetNym(did string) (*ReadReply, error) {
 	var nymreq C.int64_t
@@ -145,7 +146,7 @@ func (r *Client) GetNym(did string) (*ReadReply, error) {
 	return r.submitReadRequest(nymreq)
 }
 
-//GetTxnAuthorAgreement fetches the current ledger Transaction Author Agreement
+// GetTxnAuthorAgreement fetches the current ledger Transaction Author Agreement
 func (r *Client) GetTxnAuthorAgreement() (*ReadReply, error) {
 	var taareq C.int64_t
 	var none *C.char
@@ -158,7 +159,7 @@ func (r *Client) GetTxnAuthorAgreement() (*ReadReply, error) {
 	return r.submitReadRequest(taareq)
 }
 
-//GetAcceptanceMethodList fetches the current ledger Acceptance Methods List (for the TAA)
+// GetAcceptanceMethodList fetches the current ledger Acceptance Methods List (for the TAA)
 func (r *Client) GetAcceptanceMethodList() (*ReadReply, error) {
 	var amlreq C.int64_t
 	var none *C.char
@@ -172,7 +173,7 @@ func (r *Client) GetAcceptanceMethodList() (*ReadReply, error) {
 	return r.submitReadRequest(amlreq)
 }
 
-//GetEndpoint fetches the registered endpoint for a DID
+// GetEndpoint fetches the registered endpoint for a DID
 func (r *Client) GetEndpoint(did string) (*ReadReply, error) {
 	return r.GetAttrib(did, "endpoint")
 }
@@ -193,7 +194,7 @@ func refreshCb(cb_id C.CallbackId, err C.ErrorCode) {
 	refreshCh <- msg
 }
 
-//RefreshPool retrieves the current pool transactions for the ledger
+// RefreshPool retrieves the current pool transactions for the ledger
 func (r *Client) RefreshPool() error {
 	refreshLock.Lock()
 	defer refreshLock.Unlock()
@@ -232,7 +233,106 @@ func statusCb(cb_id C.CallbackId, err C.ErrorCode, response *C.char) {
 	statusCh <- msg
 }
 
-//GetPoolStatus fetches the current status and node list of the distributed ledger
+// AddHandle adds a handle for the provided DID
+func (r *Client) AddHandle(did, handle string, data map[string]interface{}) (*ReadReply, error) {
+	attribreq := NewHandleRequest(did, did, data)
+	fmt.Println("\n\nHandle request is ----> ", attribreq)
+	b, err := json.MarshalIndent(attribreq, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Print(string(b))
+	//attribreq := NewRawAttribRequest(did, handle, did)
+	// d, err := json.Marshal(attribreq)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("marhsal indy handle request failed: (%w)", err)
+	// }
+
+	// seed, err := identifiers.ConvertSeed("arunsteward000000000000000000000")
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	// pr, _ := base58.Decode("3Jpzds9FexW4VAWtknjPDWBPmnEsz3c2zzACb3ye1S9dhDwTB4S9RueXm7FDbt8uoSVfY9ADXuK2A9rZZrkxWZW8")
+	// privkey := ed25519.PrivateKey(pr)
+	privkey := ed25519.PrivateKey{4, 123, 156, 39, 192, 254, 245, 124, 65, 111, 146, 192, 145, 75, 96, 55, 190, 138, 174, 166, 235, 131, 206, 145, 121, 85, 24, 136, 44, 179, 45, 187, 157, 103, 70, 181, 182, 92, 220, 61, 142, 240, 173, 12, 163, 131, 216, 55, 167, 55, 24, 135, 30, 95, 224, 147, 74, 170, 247, 210, 1, 124, 54, 129}
+	//	privkey := ed25519.NewKeyFromSeed(seed)
+	pubkey := privkey.Public().(ed25519.PublicKey)
+	fmt.Println("\n-------------- PRIVATE KEY -----------------\n", privkey)
+	fmt.Println("\n-------------- PUBLIC KEY -----------------\n", pubkey)
+	fmt.Println("---- Private Key ---- ", base58.Encode(privkey))
+	fmt.Println("---- Public Key ---- ", base58.Encode(pubkey))
+	//	pub, priv, _ := ed25519.GenerateKey()
+	sign := crypto.NewSigner(pubkey, privkey)
+	response, err := r.SubmitWrite(attribreq, sign)
+	if err != nil {
+		fmt.Println("Error is: ", err)
+		panic(err)
+	}
+	fmt.Println("Response is ---> ", response)
+	return nil, nil
+	// response, err := r.Submit(d)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("unable to submit indy add handle request. (%w)", err)
+	// }
+
+	// return response, nil
+
+}
+
+func (r *Client) GetHandle(did string, from string, data map[string]interface{}) (*ReadReply, error) {
+	attribreq := NewGetHandleRequest(did, from, data)
+	d, err := json.Marshal(attribreq)
+	if err != nil {
+		return nil, fmt.Errorf("marhsal indy attr request failed: (%w)", err)
+	}
+
+	response, err := r.Submit(d)
+	if err != nil {
+		return nil, fmt.Errorf("unable to submit indy get attr request. (%w)", err)
+	}
+
+	fmt.Println("Response received from ledger is: ", response.Data)
+	return response, nil
+
+}
+
+func (r *Client) AuctionStart(did string, data map[string]interface{}) (*ReadReply, error) {
+	auctionreq := NewAuctionStartRequest(did, did, data)
+	//attribreq := NewRawAttribRequest(did, handle, did)
+	// d, err := json.Marshal(attribreq)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("marhsal indy handle request failed: (%w)", err)
+	// }
+
+	// seed, err := identifiers.ConvertSeed("arunsteward000000000000000000000")
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	privkey := ed25519.PrivateKey{83, 24, 37, 254, 51, 97, 175, 13, 103, 181, 98, 200, 220, 149, 82, 91, 168, 248, 137, 159, 62, 64, 106, 26, 63, 223, 97, 89, 255, 217, 210, 50, 86, 138, 225, 111, 121, 207, 185, 123, 29, 87, 230, 86, 49, 186, 1, 122, 38, 82, 253, 119, 209, 129, 66, 189, 78, 56, 182, 222, 17, 96, 138, 159}
+	//	privkey := ed25519.NewKeyFromSeed(seed)
+	pubkey := privkey.Public().(ed25519.PublicKey)
+
+	fmt.Println("---- Private Key ---- ", base58.Encode(privkey))
+	fmt.Println("---- Public Key ---- ", base58.Encode(pubkey))
+	//	pub, priv, _ := ed25519.GenerateKey()
+	sign := crypto.NewSigner(pubkey, privkey)
+	response, err := r.SubmitWrite(auctionreq, sign)
+	if err != nil {
+		fmt.Println("Error is: ", err)
+		panic(err)
+	}
+	fmt.Println("Response is ---> ", response)
+	return nil, nil
+	// response, err := r.Submit(d)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("unable to submit indy add handle request. (%w)", err)
+	// }
+
+	// return response, nil
+
+}
+
+// GetPoolStatus fetches the current status and node list of the distributed ledger
 func (r *Client) GetPoolStatus() (*PoolStatus, error) {
 	statusLock.Lock()
 	defer statusLock.Unlock()
@@ -256,7 +356,7 @@ func (r *Client) GetPoolStatus() (*PoolStatus, error) {
 	return ps, nil
 }
 
-//GetAttrib fetches the attribute from the raw field of the provided DID
+// GetAttrib fetches the attribute from the raw field of the provided DID
 func (r *Client) GetAttrib(did, raw string) (*ReadReply, error) {
 	attribreq := NewRawAttribRequest(did, raw, did)
 	d, err := json.Marshal(attribreq)
@@ -273,7 +373,7 @@ func (r *Client) GetAttrib(did, raw string) (*ReadReply, error) {
 
 }
 
-//GetSchema returns the schema definition defined by schemaID on the Indy distributed ledger
+// GetSchema returns the schema definition defined by schemaID on the Indy distributed ledger
 func (r *Client) GetSchema(schemaID string) (*ReadReply, error) {
 	var schemareq C.int64_t
 	var none *C.char
@@ -289,7 +389,7 @@ func (r *Client) GetSchema(schemaID string) (*ReadReply, error) {
 
 }
 
-//GetCredDef returns the credential definition defined by credDefID on the Indy distributed ledger
+// GetCredDef returns the credential definition defined by credDefID on the Indy distributed ledger
 func (r *Client) GetCredDef(credDefID string) (*ReadReply, error) {
 	var credDefReqNo C.int64_t
 	var none *C.char
@@ -305,13 +405,13 @@ func (r *Client) GetCredDef(credDefID string) (*ReadReply, error) {
 
 }
 
-//GetAuthRules fetches all AUTH rules for the ledger
+// GetAuthRules fetches all AUTH rules for the ledger
 func (r *Client) GetAuthRules() (*ReadReply, error) {
 	return r.GetTxnTypeAuthRule("", "", "")
 }
 
-//TODO:  figure out why "*" doesn't work as a wildcard for field
-//GetTxnTypeAuthRule fetches the AUTH rule for a specific transaction type and action
+// TODO:  figure out why "*" doesn't work as a wildcard for field
+// GetTxnTypeAuthRule fetches the AUTH rule for a specific transaction type and action
 func (r *Client) GetTxnTypeAuthRule(typ, action, field string) (*ReadReply, error) {
 	var authReq *Request
 	switch action {
@@ -388,8 +488,8 @@ func (r *Client) submitWriteRequest(reqID C.int64_t) (*WriteReply, error) {
 	return rply, nil
 }
 
-//SubmitWrite is used to send prepared write requests to the ledger where the req parameter is the JSON-formatted payload.
-//the signer defined a service capable of signing a message that is allowed to be written to the ledger.
+// SubmitWrite is used to send prepared write requests to the ledger where the req parameter is the JSON-formatted payload.
+// the signer defined a service capable of signing a message that is allowed to be written to the ledger.
 func (r *Client) SubmitWrite(req *Request, signer Signer) (*WriteReply, error) {
 	d, _ := json.MarshalIndent(req, " ", "")
 	m := map[string]interface{}{}

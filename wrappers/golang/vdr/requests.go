@@ -3,6 +3,7 @@ package vdr
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -15,21 +16,27 @@ const (
 )
 
 const (
-	NODE          = "0"
-	NYM           = "1"
-	ATTRIB        = "100"
-	SCHEMA        = "101"
-	CLAIM_DEF     = "102"
-	POOL_UPGRADE  = "109"
-	NODE_UPGRADE  = "110"
-	POOL_CONFIG   = "111"
-	GET_TXN       = "3"
-	GET_ATTR      = "104"
-	GET_NYM       = "105"
-	GET_SCHEMA    = "107"
-	GET_CLAIM_DEF = "108"
-	GET_AUTH_RULE = "121"
-
+	NODE            = "0"
+	NYM             = "1"
+	ATTRIB          = "100"
+	HANDLETXN       = "99994"
+	GETHANDLETXN    = "99996"
+	AUCTIONSTART    = "99990"
+	SCHEMA          = "101"
+	RICH_SCHEMA     = "201"
+	SET_CONTEXT     = "200"
+	CLAIM_DEF       = "102"
+	POOL_UPGRADE    = "109"
+	NODE_UPGRADE    = "110"
+	POOL_CONFIG     = "111"
+	GET_TXN         = "3"
+	GET_ATTR        = "104"
+	GET_NYM         = "105"
+	GET_SCHEMA      = "107"
+	GET_CLAIM_DEF   = "108"
+	GET_AUTH_RULE   = "121"
+	GET_RICH_SCHEMA = "301"
+	GET_CONTEXT     = "300"
 	protocolVersion = 2
 
 	AuthActionAdd  = "ADD"
@@ -52,10 +59,14 @@ type Request struct {
 	ProtocolVersion int            `json:"protocolVersion"`
 	Signature       string         `json:"signature,omitempty"`
 	TAAAcceptance   *TAAAcceptance `json:"taaAcceptance,omitempty"`
+	Handle          string         `json:"handle,omitempty"`
 }
 
 type Operation struct {
 	Type string `json:"type"`
+	//Handle string                 `json:"handle,omitempty"`
+	Dest string                 `json:"dest"`
+	Data map[string]interface{} `json:"data,omitempty"`
 }
 
 type TAAAcceptance struct {
@@ -70,10 +81,12 @@ type NymRequest struct {
 }
 
 type Nym struct {
-	Operation `json:",inline"`
-	Dest      string `json:"dest"`
-	Role      string `json:"role,omitempty"`
-	Verkey    string `json:"verkey,omitempty"`
+	Operation     `json:",inline"`
+	Dest          string `json:"dest"`
+	Role          string `json:"role,omitempty"`
+	DIDDocContent string `json:"diddocContent"`
+	//	Handle        string `json:"handle"`
+	Verkey string `json:"verkey,omitempty"`
 }
 
 type endpointvalue struct {
@@ -92,15 +105,18 @@ func NewNymRequest(did, from string) *Request {
 	}
 }
 
-func NewNym(did, verkey, from, role string) *Request {
+func NewNym(did, verkey, from, role, diddoc string) *Request {
 	return &Request{
 		Operation: Nym{
-			Operation: Operation{Type: NYM},
-			Dest:      did,
-			Verkey:    verkey,
-			Role:      role,
+			Operation:     Operation{Type: NYM},
+			Dest:          did,
+			Verkey:        verkey,
+			DIDDocContent: diddoc,
+			//Handle:        "myhandle",
+			Role: role,
 		},
-		Identifier:      from,
+		Identifier: from,
+		//	Endorser:        from,
 		ReqID:           uuid.New().ID(),
 		ProtocolVersion: protocolVersion,
 	}
@@ -114,6 +130,20 @@ type AttribRequest struct {
 	Enc       string `json:"enc,omitempty"`
 }
 
+type HandleRequest struct {
+	Operation `json:",inline"`
+	Dest      string `json:"dest"`
+	//Handle    string `json:"handle,omitempty"`
+	Data map[string]interface{} `json:"-"`
+}
+
+type AuctionStartRequest struct {
+	Operation `json:",inline"`
+	Data      map[string]interface{} `json:"data,omitempty"`
+	Dest      string                 `json:"dest"`
+	// Handle    string `json:"handle,omitempty"`
+}
+
 type Attrib struct {
 	Operation `json:",inline"`
 	Dest      string                 `json:"dest"`
@@ -125,6 +155,18 @@ type Attrib struct {
 
 func NewRawAttribRequest(did, raw, from string) *Request {
 	return newAttribRequest(AttribRequest{Operation: Operation{Type: GET_ATTR}, Dest: did, Raw: raw}, from)
+}
+
+func NewHandleRequest(did, from string, data map[string]interface{}) *Request {
+	return newHandleRequest(HandleRequest{Operation: Operation{Type: HANDLETXN, Data: data, Dest: did}, Dest: did}, from)
+}
+
+func NewGetHandleRequest(did, from string, data map[string]interface{}) *Request {
+	return newHandleRequest(HandleRequest{Operation: Operation{Type: GETHANDLETXN, Data: data, Dest: did}, Dest: did}, from)
+}
+
+func NewAuctionStartRequest(did, from string, data map[string]interface{}) *Request {
+	return newAuctionStartRequest(AuctionStartRequest{Operation: Operation{Type: AUCTIONSTART, Dest: did}, Data: data, Dest: did}, from)
 }
 
 func NewHashAttribRequest(did, data, from string) *Request {
@@ -142,7 +184,44 @@ func newAttribRequest(attrReq AttribRequest, from string) *Request {
 		Operation:       attrReq,
 		Identifier:      from,
 		ProtocolVersion: protocolVersion,
-		ReqID:           uuid.New().ID(),
+		//	Handle:          "myhandle",
+		ReqID: uuid.New().ID(),
+	}
+}
+
+func newHandleRequest(handReq HandleRequest, from string) *Request {
+	reqId := uuid.New().ID()
+	fmt.Println("\n\nRequest ID is: ", reqId)
+	return &Request{
+		Operation:       handReq,
+		Identifier:      from,
+		ProtocolVersion: protocolVersion,
+		//	Handle:          "handle",
+		ReqID: reqId,
+	}
+}
+
+func newGetHandleRequest(handReq HandleRequest, from string) *Request {
+	reqId := uuid.New().ID()
+	fmt.Println("\n\nRequest ID is: ", reqId)
+	return &Request{
+		Operation:       handReq,
+		Identifier:      from,
+		ProtocolVersion: protocolVersion,
+		//	Handle:          "handle",
+		ReqID: reqId,
+	}
+}
+
+func newAuctionStartRequest(auctReq AuctionStartRequest, from string) *Request {
+	reqId := uuid.New().ID()
+	fmt.Println("\n\nRequest ID is: ", reqId)
+	return &Request{
+		Operation:       auctReq,
+		Identifier:      from,
+		ProtocolVersion: protocolVersion,
+		Handle:          "myhandle",
+		ReqID:           reqId,
 	}
 }
 
