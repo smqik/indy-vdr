@@ -106,7 +106,7 @@ impl RequestType for RSPresDefOperation {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetRichSchemaById {
-    #[serde(rename = "type")]
+   // #[serde(rename = "type")]
     pub id: RichSchemaId,
 }
 
@@ -125,7 +125,7 @@ impl Validatable for GetRichSchemaById {
 
 #[derive(Serialize, Debug)]
 pub struct GetRichSchemaByIdOperation {
-    #[serde(rename = "type")]
+  //  #[serde(rename = "type")]
     pub _type: String,
     pub id: RichSchemaId,
 }

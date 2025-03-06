@@ -2,9 +2,12 @@ package identifiers
 
 import (
 	"crypto/ed25519"
+	"crypto/sha256"
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/mr-tron/base58"
 	"github.com/stretchr/testify/require"
 )
 
@@ -242,6 +245,16 @@ func TestDID_String(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestVerkeyGenerate(t *testing.T) {
+	hasher := sha256.New()
+	hasher.Write([]byte("hitesh"))
+	seedBytes := hasher.Sum(nil)
+	key := ed25519.NewKeyFromSeed(seedBytes)
+	pubKey := key.Public().(ed25519.PublicKey)
+	fmt.Println("Public key: ", base58.Encode(pubKey), len(pubKey))
+	//ed25519.GenerateKey()
 }
 
 func TestParseDID(t *testing.T) {

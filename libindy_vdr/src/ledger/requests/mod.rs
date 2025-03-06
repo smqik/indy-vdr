@@ -20,7 +20,6 @@ pub mod pool;
 pub mod rev_reg;
 /// Revocation registry definition operations
 pub mod rev_reg_def;
-#[cfg(any(feature = "rich_schema", test))]
 /// Rich schema operations
 #[macro_use]
 pub mod rich_schema;
@@ -30,6 +29,10 @@ pub mod schema;
 pub mod txn;
 /// GET_VALIDATOR_INFO operation
 pub mod validator_info;
+
+pub mod handle;
+
+pub mod auction;
 
 use std::collections::HashMap;
 

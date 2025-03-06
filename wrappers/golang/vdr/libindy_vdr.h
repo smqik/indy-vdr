@@ -182,6 +182,18 @@ typedef struct ByteBuffer {
 extern "C" {
 #endif // __cplusplus
 
+ErrorCode did_create();
+
+ErrorCode wallet_create(FfiStr key, FfiStr walletname);
+
+ErrorCode wallet_open(FfiStr key, FfiStr walletname);
+
+ErrorCode did_create(FfiStr key, FfiStr walletname, FfiStr seed, FfiStr method, FfiStr metadata);
+
+ErrorCode did_list(FfiStr key, FfiStr walletname);
+
+ErrorCode did_use();
+
 ErrorCode indy_vdr_build_acceptance_mechanisms_request(FfiStr submitter_did,
                                                        FfiStr aml,
                                                        FfiStr version,
@@ -193,6 +205,11 @@ ErrorCode indy_vdr_build_attrib_request(FfiStr submitter_did,
                                         FfiStr hash,
                                         FfiStr raw,
                                         FfiStr enc,
+                                        RequestHandle *handle_p);
+
+ErrorCode indy_vdr_build_handle_request(FfiStr submitter_did,
+                                        FfiStr target_did,
+                                        FfiStr handle,
                                         RequestHandle *handle_p);
 
 ErrorCode indy_vdr_build_cred_def_request(FfiStr submitter_did,
@@ -237,19 +254,16 @@ ErrorCode indy_vdr_build_get_revoc_reg_request(FfiStr submitter_did,
                                                int64_t timestamp,
                                                RequestHandle *handle_p);
 
-#if (defined(DEFINE_RICH_SCHEMA) || defined(DEFINE_TEST))
 ErrorCode indy_vdr_build_get_rich_schema_object_by_id_request(FfiStr submitter_did,
                                                               FfiStr rs_id,
                                                               RequestHandle *handle_p);
-#endif
 
-#if (defined(DEFINE_RICH_SCHEMA) || defined(DEFINE_TEST))
 ErrorCode indy_vdr_build_get_rich_schema_object_by_metadata_request(FfiStr submitter_did,
                                                                     FfiStr rs_type,
                                                                     FfiStr rs_name,
                                                                     FfiStr rs_version,
                                                                     RequestHandle *handle_p);
-#endif
+//#endif
 
 ErrorCode indy_vdr_build_get_schema_request(FfiStr submitter_did,
                                             FfiStr schema_id,
@@ -285,7 +299,6 @@ ErrorCode indy_vdr_build_revoc_reg_entry_request(FfiStr submitter_did,
                                                  FfiStr revoc_reg_entry,
                                                  RequestHandle *handle_p);
 
-#if (defined(DEFINE_RICH_SCHEMA) || defined(DEFINE_TEST))
 ErrorCode indy_vdr_build_rich_schema_request(FfiStr submitter_did,
                                              FfiStr rs_id,
                                              FfiStr rs_content,
@@ -294,7 +307,6 @@ ErrorCode indy_vdr_build_rich_schema_request(FfiStr submitter_did,
                                              FfiStr rs_type,
                                              FfiStr ver,
                                              RequestHandle *handle_p);
-#endif
 
 ErrorCode indy_vdr_build_schema_request(FfiStr submitter_did,
                                         FfiStr schema,

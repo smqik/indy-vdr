@@ -114,9 +114,7 @@ func CreateDID(info *MyDIDInfo) (*DID, error) {
 		},
 		Verkey: base58.Encode(info.PublicKey),
 	}
-
 	return out, nil
-
 }
 
 func ConvertSeed(seed string) ([]byte, error) {

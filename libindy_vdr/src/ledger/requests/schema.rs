@@ -70,7 +70,6 @@ impl RequestType for GetSchemaOperation {
     fn get_txn_type<'a>() -> &'a str {
         GET_SCHEMA
     }
-
     fn get_sp_key(&self, protocol_version: ProtocolVersion) -> VdrResult<Option<Vec<u8>>> {
         let marker = get_sp_key_marker(2, protocol_version);
         Ok(Some(
