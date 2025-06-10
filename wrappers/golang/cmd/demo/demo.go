@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -65,143 +63,108 @@ func main() {
 // }
 
 func readOnlyDemo() {
-	genesisFilePath := "./pool_transactions_genesis.json"
-	//file, _ := os.ReadFile(genesisFilePath)
-	file, err := os.ReadFile(genesisFilePath)
+	genesisFile, err := http.Get("https://raw.githubusercontent.com/QikHitesh/genesisfiles/refs/heads/main/pool_transactions_genesis")
 	if err != nil {
-		log.Fatalln("Error in reading file: ", err)
+		log.Fatalln(err)
 	}
+	defer genesisFile.Body.Close()
 
-	// Convert []byte to io.Reader
-	reader := bytes.NewReader(file)
-	readCloser := io.NopCloser(reader)
-	client, err := vdr.New(readCloser)
+	client, err := vdr.New(genesisFile.Body)
 	if err != nil {
-		log.Fatalln("Error in creating client: ", err)
+		log.Fatalln(err)
 	}
-	// 	endorserDID := "BuGZVAtnRDcQvxNYckm1CW"
-	// 	privkey := ed25519.NewKeyFromSeed([]byte("amitsteward000000000000000000000"))
+	// genesisFilePath := "./pool_transactions_genesis.json"
+	// //file, _ := os.ReadFile(genesisFilePath)
+	// file, err := os.ReadFile(genesisFilePath)
+	// if err != nil {
+	// 	log.Fatalln("Error in reading file: ", err)
+	// }
 
-	// 	pubkey := privkey.Public().(ed25519.PublicKey)
+	// // Convert []byte to io.Reader
+	// reader := bytes.NewReader(file)
+	// readCloser := io.NopCloser(reader)
+	// client, err := vdr.New(readCloser)
+	// if err != nil {
+	// 	log.Fatalln("Error in creating client: ", err)
+	// }
+	// endorserDID := "NpK4B8mG8H3qMEXpsWXmLp"
+	//privkey := ed25519.NewKeyFromSeed([]byte("hiteshsteward0000000000000000000"))
+	// priv := []byte{17, 133, 76, 144, 73, 168, 92, 87, 238, 66, 22, 111, 209, 14, 83, 248, 15, 223, 74, 94, 213, 188, 242, 38, 127, 181, 127, 192, 137, 107, 33, 235, 156, 118, 230, 84, 104, 160, 63, 94, 58, 191, 158, 163, 238, 5, 222, 197, 9, 218, 67, 33, 217, 112, 24, 49, 118, 63, 28, 79, 227, 117, 125, 210}
+	// privkey := ed25519.PrivateKey(priv)
+	// pubKey := privkey.Public()
+	// pubkey := pubKey.(ed25519.PublicKey)
 
-	// 	fmt.Println("---- Private Key ---- ", base58.Encode(privkey))
-	// 	fmt.Println("---- Public Key ---- ", base58.Encode(pubkey))
-	// 	//	pub, priv, _ := ed25519.GenerateKey()
-	// 	sign := crypto.NewSigner(pubkey, privkey)
+	// fmt.Println("---- Private Key ---- ", base58.Encode(privkey))
+	// fmt.Println("---- Public Key ---- ", base58.Encode(pubkey))
+	//	pub, priv, _ := ed25519.GenerateKey()
+	// sign := crypto.NewSigner(pubkey, privkey)
 	// 	didDoc := `
 	// 	{
 	//   "@context": [
 	//     "https://www.w3.org/ns/did/v1",
-	//     "https://w3id.org/security/bbs/v1",
-	//     "https://w3id.org/security/multikey/v1",
+	//     "https://w3id.org/security/suites/ed25519-2020/v1",
 	//     "https://w3id.org/security/suites/jws-2020/v1",
-	//     "https://w3id.org/security/v2"
+	//     "https://w3id.org/security/bbs/v1"
 	//   ],
-	//   "diddoc":
-	//   {
-	//   "@context": [
-	//     "https://www.w3.org/ns/did/v1",
-	//     "https://w3id.org/security/bbs/v1",
-	//     "https://w3id.org/security/multikey/v1",
-	//     "https://w3id.org/security/suites/jws-2020/v1",
-	//     "https://w3id.org/security/v2"
-	//   ],
-	//   "id": "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8",
-	//   "authentication": [
-	//     "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-ed25519-1",
-	//     "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-ecp256-1",
-	//     "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-secp256k1-1"
-	//   ],
-	//   "assertionMethod": [
-	//     "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-bbs-1",
-	//     "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-ed25519-1"
-	//   ],
-	//   "keyAgreement": [
-	//     "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-x25519-1",
-	//     "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-ecp384-1",
-	//     "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-ecp256-1"
-	//   ],
-	//   "verificationMethod": [
-	//     {
-	//       "id": "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-bbs-1",
-	//       "type": "Multikey",
-	//       "publicKeyMultibase": "lC-1irBjRgJjB7cE6jPJQAR-SBZwW7R2HcfQbAMX2ESXSJ4wisYMU984K_KepwzLEKmQEoNkXYq_R6DzsZTqSEMst8zy4O4FlDa1HAT5c6dlt7Znw9s4wMxyVpITUVgg"
-	//     },
-	//     {
-	//       "id": "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-ed25519-1",
-	//       "type": "JsonWebKey2020",
-	//       "publicKeyJwk": {
-	//         "crv": "Ed25519",
-	//         "kty": "OKP",
-	//         "x": "RqeugcPLxfRmdwzqgQsaz-XGFMfCtblOq8R3r3nhQFg"
+	//   "diddoc": {
+	//     "@context": [
+	//       "https://www.w3.org/ns/did/v1",
+	//       "https://w3id.org/security/suites/ed25519-2020/v1",
+	//       "https://w3id.org/security/suites/jws-2020/v1",
+	//       "https://w3id.org/security/bbs/v1"
+	//     ],
+	//     "id": "did:fox:VHcJhQXWi3qDeo1x9ihJQ6",
+	//     "authentication": [
+	//       "did:fox:VHcJhQXWi3qDeo1x9ihJQ6#key-ed25519-1"
+	//     ],
+	//     "assertionMethod": [
+	//       "did:fox:VHcJhQXWi3qDeo1x9ihJQ6#key-bbs-1",
+	//       "did:fox:VHcJhQXWi3qDeo1x9ihJQ6#key-ed25519-1"
+	//     ],
+	//     "keyAgreement": [
+	//       "did:fox:VHcJhQXWi3qDeo1x9ihJQ6#key-ecp384-1"
+	//     ],
+	//     "verificationMethod": [
+	//       {
+	//         "id": "did:fox:VHcJhQXWi3qDeo1x9ihJQ6#key-bbs-1",
+	//         "type": "BbsBlsSignature2020",
+	//         "publicKeyMultibase": "l_AgbnfnMPE0Wwnw9lixXD4vd7snyUDYUj--ADa0xN54YS8X_noPynKdoGGmIKdbD32KC7dTIPblZ_xgUvzEiBIJgMOZn0aza5lUWX2ujNEc8YV45ku_JVULiJkwwnSG"
+	//       },
+	//       {
+	//         "id": "did:fox:VHcJhQXWi3qDeo1x9ihJQ6#key-ed25519-1",
+	//         "type": "JsonWebKey2020",
+	//         "publicKeyJwk": {
+	//           "crv": "Ed25519",
+	//           "kty": "OKP",
+	//           "x": "h_j0WZuJ4JT7cXYhp-XTt48acJAhQt6n3SAsIR1xJ2E"
+	//         }
+	//       },
+	//       {
+	//         "id": "did:fox:VHcJhQXWi3qDeo1x9ihJQ6#key-ecp384-1",
+	//         "type": "JsonWebKey2020",
+	//         "publicKeyJwk": {
+	//           "crv": "P-384",
+	//           "kty": "EC",
+	//           "x": "DNBQJLofrE08v-aRJikdgGcdyEWmQ3TRRAoKH_8G-8yOerhbmi_tTbDfmfxlfQmD",
+	//           "y": "eI8wX1J7xWCyo3PB2foPWeOyZB0yFJJDI28d_4C8V_dKYSR7nTKIT0fA3SvopRqr"
+	//         }
 	//       }
-	//     },
-	//     {
-	//       "id": "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-x25519-1",
-	//       "type": "JsonWebKey2020",
-	//       "publicKeyJwk": {
-	//         "crv": "X25519",
-	//         "kty": "OKP",
-	//         "x": "hoLYb-L8VZlq__w8PvLE3rxrNiWxRbPHXg6KmM4iUFQ"
-	//       }
-	//     },
-	//     {
-	//       "id": "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-ecp384-1",
-	//       "type": "JsonWebKey2020",
-	//       "publicKeyJwk": {
-	//         "crv": "P-384",
-	//         "kty": "EC",
-	//         "x": "Xy2AzxYLHRmQnWPFIwVuRGv6zF8ee0e8VrH1vXNQeklR0hLhRFemlHtKqnlvMB69",
-	//         "y": "5sENVXeKBVzSdE79BFyP2_6vnjUoIWRsdqEcJqeuCoDMjPqEEjKtECFYiCzRkLNn"
-	//       }
-	//     },
-	//     {
-	//       "id": "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-ecp256-1",
-	//       "type": "JsonWebKey2020",
-	//       "publicKeyJwk": {
-	//         "crv": "P-256",
-	//         "kty": "EC",
-	//         "x": "UN4nq8lSSe2YZU1XuVdtE1MvdMIIMcf44YKBMERin9U",
-	//         "y": "HWKmQ4_feca5rUvGBkYjTZ4ikHKc3F_yTi3ceUeBmHo"
-	//       }
-	//     },
-	//     {
-	//       "id": "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#key-secp256k1-1",
-	//       "type": "JsonWebKey2020",
-	//       "publicKeyJwk": {
-	//         "crv": "secp256k1",
-	//         "kty": "EC",
-	//         "x": "s7nt3iVxjWIiGpWwkYTAWz_wrQYLV6qqo1C8QGZFLjM",
-	//         "y": "aYltKH0PKYnCBhFWsRHuOb05TGL6DKAEA5bYTyRaTQg"
-	//       }
-	//     }
-	//   ],
-	//   "service": [
-	//     {
-	//       "id": "did:fox:AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8#didcomm-1",
-	//       "type": "DIDCommMessaging",
-	//       "serviceEndpoint": {
-	//         "accept": [
-	//           "didcomm/v2",
-	//           "didcomm/aip2;env=rfc587"
-	//         ],
-	//         "uri": "https://authorizationserver-dot-qikfox-identity-ecosystem.wl.r.appspot.com"
-	//       }
-	//     }
-	//   ]
+	//     ]
+	//   }
 	// }
-	// }
-	// 	`
+	// 		`
 	// 	//userPrivKey := []byte{145, 56, 237, 172, 49, 117, 132, 130, 235, 132, 34, 88, 203, 121, 160, 134, 233, 37, 80, 117, 88, 23, 208, 158, 133, 21, 167, 132, 129, 206, 200, 179, 70, 167, 174, 129, 195, 203, 197, 244, 102, 119, 12, 234, 129, 11, 26, 207, 229, 198, 20, 199, 194, 181, 185, 78, 171, 196, 119, 175, 121, 225, 64, 88}
 	// 	//priv := ed25519.PrivateKey(userPrivKey)
 	// 	///	pub := priv.Public()
 	// 	//pubBytes, _ := json.Marshal(pub)
-	// 	base58encoded := "5koqZt1PHyWc2xnEhL6pbqJovJLuyZddKQyFNUwYEVeF"
+	// 	base58encoded := "A9nDWzfkz5tEtJqbAYwiMpciYjzyQozCpibbeeTSFpgp"
 	// 	fmt.Println("\n\nPub key is: ", base58encoded)
 	// 	//	priv.Public()
-	//err = client.CreateNym("AmtTuiwsyTC1N2YPraPKcWSUspQuARMQDfvuC1fNR5X8", base58encoded, "", endorserDID, didDoc, sign)
-
-	//var id, name, context string
+	// 	err = client.CreateNym("VHcJhQXWi3qDeo1x9ihJQ6", base58encoded, "", endorserDID, didDoc, sign)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// //var id, name, context string
 	resp, err := client.AddNewContext("")
 	//resp, err := client.MultiSign()
 	if err != nil {
@@ -217,8 +180,8 @@ func readOnlyDemo() {
 	//	fmt.Println("Response is -----> ", resp)
 	os.Exit(1)
 
-	// // client.AddNYM()
-	// os.Exit(1)
+	// client.AddNYM()
+	os.Exit(1)
 
 	// res, err := client.AddRichSchema("BuGZVAtnRDcQvxNYckm1CW")
 	// if err != nil {

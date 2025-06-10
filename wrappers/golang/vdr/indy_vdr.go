@@ -26,7 +26,6 @@ import "C"
 import (
 	"bytes"
 	"crypto/ed25519"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -725,19 +724,18 @@ func (r *Client) AddNewContext(id string) (*ReadReply, error) {
 	fmt.Println("------------- Adding Context -------------")
 	//var schreq *C.int64_t
 	//	submitterDID := ""
-	content := `
-{
+	content := `{
   "@context": {
     "@protected": true,
     "@version": 1.1,
     "IndividualHandle": {
-     "@context": {
-      "@protected": true,
-      "@version": 1.1,
-      "schema": "http://schema.org/",
-      "handleIdentifier": "schema:handleIdentifier"
-    },
-    "@id": "https://blockchaingateway.qikfox.com/getContext/IndividualHandleUserProfileCredentialContext.jsonld#IndividualHandle"
+      "@context": {
+        "@protected": true,
+        "@version": 1.1,
+        "handleIdentifier": "schema:handleIdentifier",
+        "schema": "http://schema.org/"
+      },
+      "@id": "https://blockchaingateway.qikfox.com/v1/getContext/IndividualHandleUserProfileCredentialContextV1.jsonld#IndividualHandle"
     },
     "PII": {
       "@context": {
@@ -765,7 +763,7 @@ func (r *Client) AddNewContext(id string) (*ReadReply, error) {
         "twitter": "schema:twitter",
         "type": "@type"
       },
-      "@id": "https://blockchaingateway.qikfox.com/getContext/IndividualHandleUserProfileCredentialContext.jsonld#PII"
+      "@id": "https://blockchaingateway.qikfox.com/v1/getContext/IndividualHandleUserProfileCredentialContextV1.jsonld#PII"
     },
     "SelfSignedCredential": {
       "@context": {
@@ -773,7 +771,7 @@ func (r *Client) AddNewContext(id string) (*ReadReply, error) {
         "id": "@id",
         "type": "@type"
       },
-      "@id": "https://blockchaingateway.qikfox.com/getContext/IndividualHandleUserProfileCredentialContext.jsonld#SelfSignedCredential"
+      "@id": "hhttps://blockchaingateway.qikfox.com/v1/getContext/IndividualHandleUserProfileCredentialContextV1.jsonld#SelfSignedCredential"
     },
     "UserInfoCredential": {
       "@context": {
@@ -784,21 +782,21 @@ func (r *Client) AddNewContext(id string) (*ReadReply, error) {
         "name": "http://schema.org/name",
         "type": "@type"
       },
-      "@id": "https://blockchaingateway.qikfox.com/getContext/IndividualHandleUserProfileCredentialContext.jsonld#UserInfoCredential"
+      "@id": "https://blockchaingateway.qikfox.com/v1/getContext/IndividualHandleUserProfileCredentialContextV1.jsonld#UserInfoCredential"
     },
     "identifier": "http://schema.org/identifier",
-    "name": "http://schema.org/name"
+    "name": "http://schema.org/name",
+    "image": "http://schema.org/image"
   }
-}
-`
+}`
+
 	// var none *C.char
 	// var none32 C.int32_t = -1 // seq_no
 	// var none64 C.int64_t = -1 // timestamp
 	//cdid := C.CString(id)
-	hasher := sha256.New()
-	hasher.Write([]byte("arunsteward000000000000000000000"))
-	seedBytes := hasher.Sum(nil)
-	priv := ed25519.NewKeyFromSeed(seedBytes)
+	privBytes, _ := base64.RawURLEncoding.DecodeString("QKC80QANMiqxM9NdwHzRI4URhj_lF1u82cJIlXdM_8I")
+	priv := ed25519.NewKeyFromSeed(privBytes)
+	//	priv := ed25519.NewKeyFromSeed(seedBytes)
 	pub := priv.Public().(ed25519.PublicKey)
 	// pr, _ := base58.Decode("2x11kq6QjK1GBuSv84pGj2vwyRVR5FDyYeKzw6mMJXecGUfqB6ypos3Q4utFfvde7uKtNzDxirXXbrvhLxCnMvYM")
 	// prForSign := ed25519.PrivateKey(pr)
@@ -822,7 +820,7 @@ func (r *Client) AddNewContext(id string) (*ReadReply, error) {
 	// 	return nil, nil
 	// }
 	// pubKey := ed25519.PublicKey(dec)
-	reply, err := r.CreateJsonldContext("IndividualHandleUserProfileCredentialContext", "IndividualHandleUserProfileCredentialContext", "1.0", content, sign)
+	reply, err := r.CreateJsonldContext("IndividualHandleUserProfileCredentialContextV1", "IndividualHandleUserProfileCredentialContextV1", "1.0", content, sign)
 	if err != nil {
 		fmt.Println("Error in adding rich schema: ", err)
 		return nil, err
@@ -840,135 +838,114 @@ func (r *Client) AddRichSchema(id string) (*ReadReply, error) {
 	cont := `
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "@id":"did:fox:DttBXwWJjKw5yrYHCGtSqP#IndividualHandleUserProfileCredentialSchema",
+  "@id":"did:fox:eSRkn5mbRjRpKv1Kcb33f#IndividualHandleUserProfileCredentialSchemaV1.jsonld",
   "@type":"rdfs:Class",
-  "type": "object",
   "properties": {
     "@context": {
-      "type": "array",
       "items": {
-        "type": "string",
-        "format": "uri"
-      }
+        "format": "uri",
+        "type": "string"
+      },
+      "type": "array"
     },
     "credentialSchema": {
-      "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "type": "string"
         },
         "type": {
           "type": "string"
         }
       },
-      "required": ["id", "type"]
+      "required": ["id", "type"],
+      "type": "object"
     },
     "credentialSubject": {
-      "type": "object",
       "properties": {
-        "familyName": {
-          "type": "string"
-        },
-        "givenName": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
-        },
-        "telephone": {
-          "type": "string"
-        },
-        "address": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "ipAddress": {
-          "type": "string"
-        },
-        "stacks": {
-          "type": "string"
-        },
-        "linkedin": {
-          "type": "string"
-        },
-        "twitter": {
-          "type": "string"
-        },
-        "facebook": {
-          "type": "string"
-        },
-        "instagram": {
-          "type": "string"
-        },
-        "gmail": {
-          "type": "string"
-        },
-        "cid": {
-          "type": "string"
-        },
-        "handle": {
-          "type": "string"
-        },
-        "defaultValue": {
-          "type": "string"
-        },
+        "address": { "type": "string" },
+        "cid": { "type": "string" },
+        "defaultValue": { "type": "string" },
+        "description": { "type": "string" },
+        "email": { "type": "string" },
+        "facebook": { "type": "string" },
+        "familyName": { "type": "string" },
+        "givenName": { "type": "string" },
+        "gmail": { "type": "string" },
+        "handle": { "type": "string" },
+        "handleIdentifier": { "type": "string" },
         "id": {
+          "format": "uri",
+          "type": "string"
+        },
+        "instagram": { "type": "string" },
+        "ipAddress": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "private": { "type": "string" },
+        "public": { "type": "string" },
+        "stacks": { "type": "string" },
+        "telephone": { "type": "string" },
+        "twitter": { "type": "string" },
+        "type": {
+          "items": { "type": "string" },
+          "type": "array"
+        }
+      },
+      "required": ["id", "type"],
+      "type": "object"
+    },
+    "id": {
+      "format": "uri",
+      "type": "string"
+    },
+    "identifier": {
+      "format": "uri",
+      "type": "string"
+    },
+    "issuanceDate": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "issuer": {
+      "oneOf": [
+        {
           "type": "string",
           "format": "uri"
         },
-        "public": {
-          "type": "string"
-        },
-        "private": {
-          "type": "string"
-        },
-        "handleIdentifier": {
-          "type": "string"
-        },
-        "type": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uri"
+            },
+            "name": { "type": "string" },
+            "image": { "type": "string" }
+          },
+          "required": ["id"]
         }
-      },
-      "required": [
-        "id", "type"
       ]
-    },
-    "id": {
-      "type": "string",
-      "format": "uri"
-    },
-    "type": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "issuer": {
-      "type": "string",
-      "format": "uri"
-    },
-    "identifier": {
-      "type": "string",
-      "format": "uri"
     },
     "name": {
       "type": "string"
     },
-    "issuanceDate": {
-      "type": "string",
-      "format": "date-time"
+    "type": {
+      "items": { "type": "string" },
+      "type": "array"
     }
   },
   "required": [
-    "@context", "credentialSchema", "credentialSubject", "id", "type", "issuer", 
-    "identifier", "name", "issuanceDate"
-  ]
+    "@context",
+    "credentialSchema",
+    "credentialSubject",
+    "id",
+    "type",
+    "issuer",
+    "identifier",
+    "name",
+    "issuanceDate"
+  ],
+  "type": "object"
 }
 	`
 	// var none *C.char
@@ -988,10 +965,8 @@ func (r *Client) AddRichSchema(id string) (*ReadReply, error) {
 	// 	return nil, nil
 	// }
 	// pubKey := ed25519.PublicKey(dec)
-	hasher := sha256.New()
-	hasher.Write([]byte("arunsteward000000000000000000000"))
-	seedBytes := hasher.Sum(nil)
-	priv := ed25519.NewKeyFromSeed(seedBytes)
+	privBytes, _ := base64.RawURLEncoding.DecodeString("QKC80QANMiqxM9NdwHzRI4URhj_lF1u82cJIlXdM_8I")
+	priv := ed25519.NewKeyFromSeed(privBytes)
 	pub := priv.Public().(ed25519.PublicKey)
 	// pr, _ := base58.Decode("2x11kq6QjK1GBuSv84pGj2vwyRVR5FDyYeKzw6mMJXecGUfqB6ypos3Q4utFfvde7uKtNzDxirXXbrvhLxCnMvYM")
 	// prForSign := ed25519.PrivateKey(pr)
@@ -1006,7 +981,7 @@ func (r *Client) AddRichSchema(id string) (*ReadReply, error) {
 	// //	pub, priv, _ := ed25519.GenerateKey()
 	// sign := crypto.NewSigner(pubkey, prForSign)
 	fmt.Println("Signer is: ", sign)
-	reply, err := r.CreateRichSchema("did:fox:DttBXwWJjKw5yrYHCGtSqP#IndividualHandleUserProfileCredentialSchema", "IndividualHandleUserProfileCredentialSchema", "1.0", cont, sign)
+	reply, err := r.CreateRichSchema("did:fox:eSRkn5mbRjRpKv1Kcb33f#IndividualHandleUserProfileCredentialSchemaV1", "IndividualHandleUserProfileCredentialSchemaV1", "1.0", cont, sign)
 	if err != nil {
 		fmt.Println("Error in adding rich schema: ", err)
 		return nil, err
